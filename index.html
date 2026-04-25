@@ -3,53 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>R.I.D — Professional Store</title>
-    <!-- Подключаем Firebase (Версия 9 COMPAT) -->
+    <title>R.I.D — Магазин</title>
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
     <link href="https://googleapis.com" rel="stylesheet">
-    <script src="https://unpkg.com"></script>
     <style>
         :root { --accent: #9d00ff; --bg: #050505; --card: #111; }
         body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; }
-        nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid #222; position: sticky; top: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 100; }
-        .logo { font-family: 'Orbitron'; color: var(--accent); font-size: 1.5rem; cursor: pointer; text-shadow: 0 0 10px var(--accent); }
         
-        /* Админка */
-        #admin-zone { display: none; background: #1a1a1a; padding: 25px; border-radius: 20px; margin: 20px auto; max-width: 500px; border: 1px solid var(--accent); }
-        input { width: 100%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; box-sizing: border-box; }
-        .btn { background: var(--accent); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
-        .btn:hover { box-shadow: 0 0 20px var(--accent); }
+        /* Шапка */
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; border-bottom: 1px solid #222; position: sticky; top: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); z-index: 100; }
+        .logo { font-family: 'Orbitron'; color: var(--accent); font-size: 1.5rem; cursor: pointer; text-shadow: 0 0 10px var(--accent); }
+        .btn-top { background: none; border: 1px solid var(--accent); color: var(--accent); padding: 7px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-top:hover { background: var(--accent); color: #000; }
 
-        /* Сетка */
-        .catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; padding: 40px; }
+        /* Модальные окна */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: #161616; padding: 30px; border-radius: 20px; border: 1px solid var(--accent); width: 90%; max-width: 400px; text-align: center; }
+        
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 10px; box-sizing: border-box; font-family: 'Inter'; }
+        .btn-action { background: var(--accent); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+
+        /* Сетка товаров */
+        .catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; padding: 30px; }
         .product { background: var(--card); border-radius: 15px; overflow: hidden; border: 1px solid #222; transition: 0.3s; position: relative; }
-        .product:hover { border-color: var(--accent); transform: translateY(-5px); }
-        .product img { width: 100%; height: 280px; object-fit: cover; background: #000; }
-        .p-info { padding: 20px; text-align: center; }
-        .p-price { color: var(--accent); font-weight: 900; font-size: 1.5rem; margin: 10px 0; }
+        .product img { width: 100%; height: 320px; object-fit: cover; }
+        .p-info { padding: 15px; text-align: center; }
+        .p-price { color: var(--accent); font-weight: 900; font-size: 1.5rem; }
+
+        /* Профили связи */
+        .contact-card { background: #0a0a0a; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.3s; }
+        .contact-card:hover { border-color: var(--accent); background: #111; }
+        .contact-avatar { width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; }
+        
         .del-btn { position: absolute; top: 10px; right: 10px; background: red; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; display: none; }
     </style>
 </head>
 <body>
 
 <nav>
-    <div class="logo" onclick="adminLogin()">R.I.D</div>
-    <a href="https://t.me" target="_blank" style="text-decoration:none; color:var(--accent); font-weight:bold;">СВЯЗЬ</a>
+    <div class="logo" onclick="openLogin()">R.I.D</div>
+    <button class="btn-top" onclick="openModal('contact-modal')">СВЯЗЬ</button>
 </nav>
 
-<div id="admin-zone">
-    <h3 style="margin-top:0">Добавить товар</h3>
-    <input type="text" id="p-img" placeholder="Ссылка на фото (URL)">
-    <input type="text" id="p-name" placeholder="Название">
-    <input type="text" id="p-price" placeholder="Цена (например: 5500 ₽)">
-    <button class="btn" onclick="saveToFirebase()">ОПУБЛИКОВАТЬ</button>
+<!-- Ввод пароля -->
+<div id="login-modal" class="modal">
+    <div class="modal-content">
+        <h3 style="font-family: 'Orbitron'; color: var(--accent);">ADMIN ACCESS</h3>
+        <input type="password" id="admin-pass" placeholder="Код доступа">
+        <button class="btn-action" onclick="checkPass()">ВОЙТИ</button>
+        <p onclick="closeModal('login-modal')" style="color:#555; cursor:pointer; margin-top:15px; font-size:0.8rem;">ОТМЕНА</p>
+    </div>
+</div>
+
+<!-- Панель добавления -->
+<div id="admin-zone" class="modal">
+    <div class="modal-content">
+        <h3 style="font-family: 'Orbitron'; margin-bottom: 20px;">НОВЫЙ ПОСТ</h3>
+        <input type="text" id="p-img" placeholder="Прямая ссылка на фото">
+        <input type="text" id="p-name" placeholder="Название">
+        <input type="text" id="p-price" placeholder="Цена (например: 4900 ₽)">
+        <button class="btn-action" onclick="saveToFirebase()">ОПУБЛИКОВАТЬ</button>
+        <p onclick="closeModal('admin-zone')" style="color:#555; cursor:pointer; margin-top:15px; font-size:0.8rem;">ЗАКРЫТЬ ПАНЕЛЬ</p>
+    </div>
+</div>
+
+<!-- Меню связи -->
+<div id="contact-modal" class="modal">
+    <div class="modal-content">
+        <h3 style="font-family: 'Orbitron'; margin-bottom: 20px;">CONTACTS</h3>
+        
+        <div class="contact-card" onclick="window.open('https://t.me', '_blank')">
+            <div class="contact-avatar">📢</div>
+            <div style="text-align:left"><b>Telegram Канал</b><br><small>Новости и релизы</small></div>
+        </div>
+
+        <div class="contact-card" onclick="window.open('https://t.me', '_blank')">
+            <div class="contact-avatar">👑</div>
+            <div style="text-align:left"><b>Владелец</b><br><small>По всем вопросам</small></div>
+        </div>
+
+        <div class="contact-card" onclick="window.open('https://t.me', '_blank')">
+            <div class="contact-avatar">⚔️</div>
+            <div style="text-align:left"><b>Зам. Владельца</b><br><small>Сотрудничество</small></div>
+        </div>
+
+        <div class="contact-card" onclick="window.open('https://t.me', '_blank')">
+            <div class="contact-avatar">🛡️</div>
+            <div style="text-align:left"><b>Администратор</b><br><small>Поддержка заказов</small></div>
+        </div>
+
+        <p onclick="closeModal('contact-modal')" style="color:#555; cursor:pointer; margin-top:15px; font-size:0.8rem;">ЗАКРЫТЬ</p>
+    </div>
 </div>
 
 <div class="catalog" id="list"></div>
 
 <script>
-    // ВСТАВЬ СВОИ ДАННЫЕ ИЗ СКРИНШОТА СЮДА:
+    // ВСТАВЬ СЮДА СВОИ ДАННЫЕ ИЗ FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyCMdjHAttDdvtAAVGKu...", 
         authDomain: "://firebaseapp.com",
@@ -63,7 +114,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Загрузка товаров
     db.collection('products').orderBy('createdAt', 'desc').onSnapshot(snap => {
         const list = document.getElementById('list');
         list.innerHTML = '';
@@ -74,9 +124,9 @@
                     <button class="del-btn" onclick="deleteItem('${doc.id}')">Удалить</button>
                     <img src="${p.img}" onerror="this.src='https://placeholder.com'">
                     <div class="p-info">
-                        <h3 style="font-family:'Orbitron'">${p.name}</h3>
+                        <h4 style="margin:0; font-family:'Orbitron'">${p.name}</h4>
                         <div class="p-price">${p.price}</div>
-                        <button class="btn" onclick="location.href='https://t.me'">КУПИТЬ</button>
+                        <button class="btn-action" onclick="window.open('https://t.me', '_blank')">КУПИТЬ</button>
                     </div>
                 </div>
             `;
@@ -88,25 +138,31 @@
         const price = document.getElementById('p-price').value;
         const img = document.getElementById('p-img').value;
 
-        if(!name || !price || !img) return alert("Заполни все поля!");
+        if(!name || !price || !img) return alert("Пустые поля!");
 
         await db.collection('products').add({
             name, price, img,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("Товар добавлен в облако!");
-        document.getElementById('admin-zone').style.display = 'none';
+        alert("Опубликовано!");
+        closeModal('admin-zone');
     }
 
-    function deleteItem(id) {
-        if(confirm("Удалить товар навсегда?")) db.collection('products').doc(id).delete();
-    }
+    function deleteItem(id) { if(confirm("Удалить товар?")) db.collection('products').doc(id).delete(); }
 
-    function adminLogin() {
-        const p = prompt("Пароль:");
+    // Логика окон
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function openLogin() { openModal('login-modal'); }
+
+    function checkPass() {
+        const p = document.getElementById('admin-pass').value;
         if(p === "rid") {
-            document.getElementById('admin-zone').style.display = 'block';
+            closeModal('login-modal');
+            openModal('admin-zone');
             document.querySelectorAll('.del-btn').forEach(b => b.style.display = 'block');
+        } else {
+            alert("Неверный код!");
         }
     }
 </script>
