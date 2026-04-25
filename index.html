@@ -3,121 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>R.I.Der | Dark Fantasy OS</title>
+    <title>Void R.I.Der | Glass Admin</title>
     <style>
-        :root { --red: #8b0000; --gold: #c5a059; --black: #050505; --gray: #1a1a1a; }
-        body { background: var(--black); color: #ccc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; overflow-x: hidden; }
+        :root {
+            --purple: #8a2be2;
+            --deep-purple: #1a0b2e;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+        body {
+            background: radial-gradient(circle at center, #1a0b2e 0%, #050505 100%);
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .main-container {
+            width: 90%;
+            max-width: 900px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 0 40px rgba(138, 43, 226, 0.2);
+        }
+        header { text-align: center; margin-bottom: 50px; }
+        h1 { font-size: 2.5rem; color: #fff; text-shadow: 0 0 15px var(--purple); letter-spacing: 4px; margin: 0; }
         
-        /* Панель управления (Admin) */
-        .admin-panel { background: var(--gray); padding: 20px; border-bottom: 2px solid var(--red); display: none; }
-        .admin-panel.active { display: block; }
-        
-        header { height: 30vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://wallhaven.cc'); background-size: cover; border-bottom: 1px solid var(--red); }
-        
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        
-        /* Сетка товаров */
-        .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-        .card { background: #111; border: 1px solid #333; padding: 20px; position: relative; transition: 0.3s; }
-        .card:hover { border-color: var(--red); box-shadow: 0 0 20px rgba(139, 0, 0, 0.4); }
-        .card img { width: 100%; height: 200px; object-fit: cover; border-radius: 4px; }
-        
-        .btn { background: var(--red); color: white; border: none; padding: 10px 20px; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 10px; width: 100%; font-weight: bold; }
-        .btn-delete { background: #444; font-size: 12px; width: auto; margin-bottom: 10px; }
-        
-        .admin-toggle { position: fixed; bottom: 20px; right: 20px; background: var(--gray); color: var(--gold); border: 1px solid var(--gold); padding: 10px; border-radius: 50%; cursor: pointer; z-index: 100; }
+        #adminPanel { 
+            display: none; 
+            padding: 20px; 
+            border: 1px dashed var(--purple); 
+            border-radius: 15px; 
+            margin-bottom: 30px; 
+            background: rgba(138, 43, 226, 0.05);
+        }
 
-        /* Стили для консультантов */
-        .team { display: flex; justify-content: center; gap: 50px; margin-top: 50px; border-top: 1px solid var(--red); padding-top: 40px; }
-        .member { text-align: center; }
-        .member img { width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--red); filter: grayscale(1); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .card { 
+            background: rgba(255, 255, 255, 0.03); 
+            border: 1px solid var(--border); 
+            padding: 20px; 
+            border-radius: 18px; 
+            text-align: center;
+            transition: 0.4s;
+        }
+        .card:hover { border-color: var(--purple); transform: translateY(-5px); background: rgba(138, 43, 226, 0.1); }
+        
+        .btn { 
+            background: var(--purple); 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: 600;
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover { box-shadow: 0 0 20px var(--purple); opacity: 0.9; }
+        .btn-admin { background: none; border: 1px solid var(--purple); font-size: 0.8rem; margin-top: 10px; }
+        .btn-del { background: #ff4444; padding: 5px 10px; font-size: 0.7rem; margin-top: 5px; display: none; }
+
+        input { background: #000; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 8px; margin: 5px; width: 80%; }
+        
+        .reviews { margin-top: 50px; padding-top: 30px; border-top: 1px solid var(--border); }
+        .rev-item { background: rgba(255,255,255,0.02); padding: 15px; border-radius: 10px; margin-bottom: 10px; font-size: 0.9rem; border-left: 3px solid var(--purple); }
     </style>
 </head>
 <body>
 
-<button class="admin-toggle" onclick="toggleAdmin()">⚙️</button>
+<div class="main-container">
+    <header>
+        <h1>VOID R.I.DER</h1>
+        <p style="color: var(--purple); font-weight: bold;">[ GLASS EDITION ]</p>
+        <button class="btn btn-admin" onclick="auth()">🔓 ВХОД ДЛЯ АДМИНОВ</button>
+    </header>
 
-<div class="admin-panel" id="adminPanel">
-    <h3>Управление Легионом</h3>
-    <input type="text" id="itemName" placeholder="Название товара">
-    <input type="text" id="itemPrice" placeholder="Цена (например, 2990 ₽)">
-    <input type="text" id="itemImg" placeholder="Ссылка на фото">
-    <button class="btn" onclick="addItem()">Добавить вкладку товара</button>
-</div>
-
-<header>
-    <h1 style="color: var(--red); letter-spacing: 10px;">R.I.Der</h1>
-    <p style="color: var(--gold);">DARK FANTASY MERCHANDISE</p>
-</header>
-
-<div class="container">
-    <div class="shop-grid" id="shopGrid">
-        <!-- Сюда будут добавляться товары -->
+    <!-- Админка (скрыта по умолчанию) -->
+    <div id="adminPanel">
+        <h3 style="color: var(--purple);">Управление товарами</h3>
+        <input type="text" id="inName" placeholder="Название товара">
+        <input type="text" id="inPrice" placeholder="Цена (напр. 3000 ₽)">
+        <button class="btn" onclick="add()">ДОБАВИТЬ ТОВАР</button>
+        <hr style="border: 0.5px solid var(--border); margin: 20px 0;">
+        <input type="password" id="newP" placeholder="Новый пароль админа">
+        <button class="btn" style="background:#555;" onclick="changeP()">СМЕНИТЬ ПАРОЛЬ</button>
     </div>
 
-    <div class="team">
-        <div class="member">
-            <img src="https://placeholder.com" alt="Me">
-            <h4 id="myName">Хранитель 1</h4>
-            <a href="https://t.me" style="color: var(--red);">ПРИЗВАТЬ</a>
-        </div>
-        <div class="member">
-            <img src="https://placeholder.com" alt="Friend">
-            <h4 id="friendName">Хранитель 2</h4>
-            <a href="https://t.me" style="color: var(--red);">ПРИЗВАТЬ</a>
-        </div>
+    <div class="grid" id="container">
+        <!-- Сюда попадут товары -->
+    </div>
+
+    <div class="reviews">
+        <h3>ОТЗЫВЫ</h3>
+        <div id="revCont"></div>
+        <input type="text" id="revIn" placeholder="Ваш отзыв..." style="width: 70%;">
+        <button class="btn" onclick="addRev()">ОТПРАВИТЬ</button>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px;">
+        <a href="https://t.me" class="btn" style="background: #229ED9;">НАПИСАТЬ В TELEGRAM</a>
     </div>
 </div>
 
 <script>
-    let items = JSON.parse(localStorage.getItem('items')) || [
-        { name: "Стандартный Артефакт", price: "2990 ₽", img: "https://placeholder.com" }
+    // Изначальный пароль и данные
+    let currentPass = localStorage.getItem('rip_pass') || 'Rid1962';
+    let products = JSON.parse(localStorage.getItem('rip_items')) || [
+        {name: "Dark Hoodie v1", price: "4990 ₽"}
     ];
+    let reviews = JSON.parse(localStorage.getItem('rip_revs')) || ["Сайт выглядит нереально круто!"];
+    let isAdmin = false;
 
-    function toggleAdmin() {
-        document.getElementById('adminPanel').classList.toggle('active');
-    }
-
-    function renderItems() {
-        const grid = document.getElementById('shopGrid');
-        grid.innerHTML = '';
-        items.forEach((item, index) => {
-            grid.innerHTML += `
-                <div class="card">
-                    <button class="btn-delete" onclick="deleteItem(${index})">Удалить [x]</button>
-                    <img src="${item.img}">
-                    <h3>${item.name}</h3>
-                    <p class="price" style="color:var(--gold)">${item.price}</p>
-                    <button class="btn" onclick="pay()">КУПИТЬ КАРТОЙ / PAYPAL</button>
-                </div>
-            `;
-        });
-        localStorage.setItem('items', JSON.stringify(items));
-    }
-
-    function addItem() {
-        const name = document.getElementById('itemName').value;
-        const price = document.getElementById('itemPrice').value;
-        const img = document.getElementById('itemImg').value;
-        if(name && price) {
-            items.push({ name, price, img: img || 'https://placeholder.com' });
-            renderItems();
-            toggleAdmin();
+    function auth() {
+        let p = prompt("Введите пароль доступа:");
+        if (p === currentPass) {
+            isAdmin = true;
+            document.getElementById('adminPanel').style.display = 'block';
+            draw();
+            alert("Доступ открыт, Мастер.");
+        } else {
+            alert("Доступ запрещен.");
         }
     }
 
-    function deleteItem(index) {
-        items.splice(index, 1);
-        renderItems();
+    function draw() {
+        const cont = document.getElementById('container');
+        cont.innerHTML = '';
+        products.forEach((x, i) => {
+            cont.innerHTML += `
+                <div class="card">
+                    <h3>${x.name}</h3>
+                    <p style="color:var(--purple); font-size:1.2rem;">${x.price}</p>
+                    <button class="btn" onclick="pay()">КУПИТЬ</button>
+                    <button class="btn btn-del" id="del-${i}" onclick="del(${i})">УДАЛИТЬ</button>
+                </div>
+            `;
+            if(isAdmin) document.getElementById(`del-${i}`).style.display = 'inline-block';
+        });
+
+        const rCont = document.getElementById('revCont');
+        rCont.innerHTML = reviews.map(r => `<div class="rev-item">${r}</div>`).join('');
+
+        localStorage.setItem('rip_items', JSON.stringify(products));
+        localStorage.setItem('rip_revs', JSON.stringify(reviews));
+    }
+
+    function add() {
+        let n = document.getElementById('inName').value;
+        let p = document.getElementById('inPrice').value;
+        if(n && p) { products.push({name: n, price: p}); draw(); }
+    }
+
+    function del(i) {
+        products.splice(i, 1);
+        draw();
+    }
+
+    function addRev() {
+        let t = document.getElementById('revIn').value;
+        if(t) { reviews.push(t); draw(); document.getElementById('revIn').value = ''; }
+    }
+
+    function changeP() {
+        let np = document.getElementById('newP').value;
+        if(np) { 
+            currentPass = np; 
+            localStorage.setItem('rip_pass', np); 
+            alert("Пароль обновлен на: " + np); 
+        }
     }
 
     function pay() {
-        // Здесь можно вставить ссылку на твой ЮMoney или PayPal
-        alert("Перенаправление на защищенный шлюз оплаты...");
-        window.location.href = "https://yoomoney.ru"; // Твоя ссылка
+        alert("Переход к оплате картой МИР / PayPal...");
+        window.location.href = "https://yoomoney.ru"; 
     }
 
-    renderItems();
+    draw();
 </script>
 
 </body>
