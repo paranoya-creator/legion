@@ -1,88 +1,202 @@
+const express = require("express");
+const sqlite3 = require("sqlite3").verbose();
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+const app = express();
+app.use(express.json());
+
+const SECRET = "hellsing_secret";
+const OWNER_EMAIL = "mytrenbolon@gmail.com";
+
+const db = new sqlite3.Database("./db.sqlite");
+
+// ===== DB =====
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY,
+    email TEXT,
+    password TEXT,
+    role TEXT
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    price INTEGER,
+    desc TEXT
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY,
+    items TEXT,
+    status TEXT
+  )`);
+});
+
+// ===== AUTH =====
+app.post("/api/register", async (req, res) => {
+  const { email, password } = req.body;
+  const hash = await bcrypt.hash(password, 10);
+
+  const role = email === OWNER_EMAIL ? "owner" : "user";
+
+  db.run(
+    "INSERT INTO users (email, password, role) VALUES (?, ?, ?)",
+    [email, hash, role],
+    () => res.send("OK")
+  );
+});
+
+app.post("/api/login", (req, res) => {
+  const { email, password } = req.body;
+
+  db.get("SELECT * FROM users WHERE email=?", [email], async (err, user) => {
+    if (!user) return res.status(400).send("Нет пользователя");
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return res.status(400).send("Неверный пароль");
+
+    const token = jwt.sign({ id: user.id, role: user.role }, SECRET);
+    res.json({ token });
+  });
+});
+
+function auth(req, res, next) {
+  const token = req.headers.authorization;
+  if (!token) return res.sendStatus(403);
+
+  try {
+    req.user = jwt.verify(token, SECRET);
+    next();
+  } catch {
+    res.sendStatus(403);
+  }
+}
+
+// ===== PRODUCTS =====
+app.get("/api/products", (req, res) => {
+  db.all("SELECT * FROM products", (err, rows) => res.json(rows));
+});
+
+app.post("/api/products", auth, (req, res) => {
+  if (req.user.role !== "owner") return res.sendStatus(403);
+
+  const { name, price, desc } = req.body;
+
+  db.run(
+    "INSERT INTO products (name, price, desc) VALUES (?, ?, ?)",
+    [name, price, desc],
+    () => res.send("OK")
+  );
+});
+
+// ===== ORDERS =====
+app.post("/api/order", auth, (req, res) => {
+  const { items } = req.body;
+
+  db.run(
+    "INSERT INTO orders (items, status) VALUES (?, ?)",
+    [JSON.stringify(items), "pending"],
+    function () {
+      res.json({ orderId: this.lastID });
+    }
+  );
+});
+
+// ===== PAYMENT (YooKassa подготовка) =====
+app.post("/api/pay", auth, (req, res) => {
+  // ПОКА заглушка
+  res.json({
+    url: "https://yoomoney.ru"
+  });
+
+  /*
+  ===== РЕАЛЬНАЯ ИНТЕГРАЦИЯ (потом вставишь) =====
+
+  const yoo = require("yookassa")({
+    shopId: "ТВОЙ_ID",
+    secretKey: "ТВОЙ_KEY"
+  });
+
+  yoo.createPayment({
+    amount: {
+      value: "100.00",
+      currency: "RUB"
+    },
+    confirmation: {
+      type: "redirect",
+      return_url: "http://localhost:3000"
+    }
+  }).then(payment => {
+    res.json({ url: payment.confirmation.confirmation_url });
+  });
+  */
+});
+
+// ===== FRONT =====
+app.get("/", (req, res) => {
+  res.send(`
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>HELLSING</title>
 
 <style>
 body {
-  margin: 0;
-  font-family: Arial;
-  background: #000;
-  color: white;
+  margin:0;
+  font-family:Arial;
+  background: linear-gradient(135deg,#000,#200000,#000);
+  color:white;
 }
 
-/* HEADER */
 header {
-  display: flex;
-  justify-content: space-between;
-  padding: 20px;
-  border-bottom: 1px solid #111;
+  display:flex;
+  justify-content:space-between;
+  padding:20px;
 }
 
 .logo {
-  font-size: 26px;
-  letter-spacing: 6px;
-}
-
-.search {
-  background: #111;
-  border: none;
-  padding: 8px;
-  color: white;
-}
-
-/* GRID */
-.container {
-  padding: 20px;
+  font-size:28px;
+  letter-spacing:6px;
 }
 
 .products {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
-  gap: 20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:20px;
+  padding:20px;
 }
 
 .card {
-  background: #111;
-  padding: 15px;
-  transition: 0.3s;
+  background:rgba(255,255,255,0.05);
+  padding:20px;
+  border-radius:10px;
+  transition:0.3s;
 }
 
 .card:hover {
-  background: #1a0000;
+  background:rgba(255,0,0,0.2);
+  transform:scale(1.05);
 }
 
-/* BUTTON */
 button {
-  background: red;
-  border: none;
-  padding: 10px;
-  color: white;
-  cursor: pointer;
+  background:linear-gradient(45deg,red,darkred);
+  border:none;
+  padding:10px;
+  color:white;
+  cursor:pointer;
 }
 
-/* CART */
-.cart {
-  position: fixed;
-  right: 0;
-  top: 0;
-  width: 320px;
-  height: 100%;
-  background: #111;
-  padding: 20px;
-  display: none;
-}
-
-/* ADMIN */
-.admin {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  background: #111;
-  padding: 15px;
-  width: 100%;
-  display: none;
+.auth {
+  position:fixed;
+  top:20%;
+  left:50%;
+  transform:translateX(-50%);
+  background:#111;
+  padding:20px;
+  display:none;
 }
 </style>
 </head>
@@ -91,111 +205,99 @@ button {
 
 <header>
   <div class="logo">HELLSING</div>
-  <input class="search" placeholder="Поиск..." oninput="search(this.value)">
-  <div>
-    <button onclick="toggleCart()">🛒</button>
-    <button onclick="toggleAdmin()">⚙️</button>
-  </div>
+  <input id="search" placeholder="Поиск..." oninput="search()">
+  <button onclick="showAuth()">👤</button>
+  <button onclick="checkout()">💳</button>
 </header>
 
-<div class="container">
-  <div class="products" id="products"></div>
-</div>
+<div class="products" id="products"></div>
 
-<!-- CART -->
-<div class="cart" id="cart">
-  <h2>Корзина</h2>
-  <div id="cartItems"></div>
-  <h3 id="total"></h3>
-  <button onclick="checkout()">Оплатить</button>
-</div>
-
-<!-- ADMIN PANEL -->
-<div class="admin" id="admin">
-  <h3>Добавить товар</h3>
-  <input id="name" placeholder="Название"><br>
-  <input id="price" placeholder="Цена"><br>
-  <input id="desc" placeholder="Описание"><br>
-  <button onclick="addProduct()">Добавить</button>
+<div class="auth" id="auth">
+  <h3>Вход</h3>
+  <input id="email" placeholder="Email"><br><br>
+  <input id="pass" placeholder="Пароль"><br><br>
+  <button onclick="register()">Регистрация</button>
+  <button onclick="login()">Войти</button>
 </div>
 
 <script>
-let products = [
-  {name:"Hoodie Black",price:4990,desc:"Oversize hoodie"},
-  {name:"T-shirt Red",price:2990,desc:"Premium cotton"}
-];
-
+let token = localStorage.getItem("token");
 let cart = [];
 
-function renderProducts(list){
-  let el = document.getElementById("products");
-  el.innerHTML = "";
-
-  list.forEach((p,i)=>{
-    el.innerHTML += `
-      <div class="card">
-        <h3>${p.name}</h3>
-        <p>${p.desc}</p>
-        <b>${p.price} ₽</b><br><br>
-        <button onclick="addToCart(${i})">В корзину</button>
-      </div>
-    `;
-  });
+function showAuth(){
+  auth.style.display="block";
 }
 
-function addToCart(i){
-  cart.push(products[i]);
-  renderCart();
+function register(){
+fetch("/api/register",{method:"POST",headers:{"Content-Type":"application/json"},
+body:JSON.stringify({email:email.value,password:pass.value})});
 }
 
-function renderCart(){
-  let el = document.getElementById("cartItems");
-  let total = 0;
-  el.innerHTML = "";
-
-  cart.forEach(p=>{
-    total += p.price;
-    el.innerHTML += `<div>${p.name} - ${p.price} ₽</div>`;
-  });
-
-  document.getElementById("total").innerText = "Итого: " + total + " ₽";
+function login(){
+fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},
+body:JSON.stringify({email:email.value,password:pass.value})})
+.then(r=>r.json())
+.then(d=>{
+token=d.token;
+localStorage.setItem("token",token);
+load();
+});
 }
 
-function toggleCart(){
-  let el = document.getElementById("cart");
-  el.style.display = el.style.display==="block"?"none":"block";
+function load(){
+fetch("/api/products")
+.then(r=>r.json())
+.then(data=>{
+products.innerHTML="";
+data.forEach(p=>{
+products.innerHTML += \`
+<div class="card">
+<h3>\${p.name}</h3>
+<p>\${p.desc}</p>
+<b>\${p.price} ₽</b><br><br>
+<button onclick="addToCart('\${p.name}')">В корзину</button>
+</div>\`;
+});
+});
 }
 
-function search(q){
-  let filtered = products.filter(p =>
-    p.name.toLowerCase().includes(q.toLowerCase()) ||
-    p.desc.toLowerCase().includes(q.toLowerCase())
-  );
-  renderProducts(filtered);
+function addToCart(name){
+cart.push(name);
+alert("Добавлено: "+name);
 }
 
-/* ADMIN */
-function toggleAdmin(){
-  let el = document.getElementById("admin");
-  el.style.display = el.style.display==="block"?"none":"block";
-}
-
-function addProduct(){
-  let name = document.getElementById("name").value;
-  let price = parseInt(document.getElementById("price").value);
-  let desc = document.getElementById("desc").value;
-
-  products.push({name,price,desc});
-  renderProducts(products);
-}
-
-/* PAYMENT */
 function checkout(){
-  alert("Здесь будет подключение YooKassa");
+fetch("/api/order",{
+method:"POST",
+headers:{"Content-Type":"application/json","Authorization":token},
+body:JSON.stringify({items:cart})
+})
+.then(r=>r.json())
+.then(order=>{
+fetch("/api/pay",{
+method:"POST",
+headers:{"Authorization":token}
+})
+.then(r=>r.json())
+.then(p=>{
+window.location.href = p.url;
+});
+});
 }
 
-renderProducts(products);
+function search(){
+let q=search.value.toLowerCase();
+document.querySelectorAll(".card").forEach(c=>{
+c.style.display=c.innerText.toLowerCase().includes(q)?"block":"none";
+});
+}
+
+load();
 </script>
 
 </body>
 </html>
+`);
+});
+
+app.listen(3000, () => console.log("http://localhost:3000"));
