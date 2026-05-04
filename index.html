@@ -1,190 +1,201 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R.I.D - Store</title>
-    <link rel="stylesheet" href="https://cloudflare.com">
-    <style>
-        :root { --accent: #8a2be2; --bg: #000; --glass: rgba(138, 43, 226, 0.12); --border: rgba(255, 255, 255, 0.1); }
-        body { background: radial-gradient(circle at center, #1a0033 0%, #000 100%); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; overflow: hidden; }
-        header { height: 60px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.5); }
-        .logo-img { height: 40px; margin-right: 10px; border-radius: 8px; }
-        main { height: calc(100vh - 130px); overflow-y: auto; padding: 20px; scroll-behavior: smooth; }
-        .page { display: none; width: 100%; } .page.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .glass { background: var(--glass); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--border); border-radius: 15px; padding: 15px; }
-        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
-        .card { text-align: center; position: relative; padding: 15px; transition: 0.3s; }
-        .card img { width: 100%; border-radius: 10px; height: 180px; object-fit: cover; }
-        .del-btn { position: absolute; top: 10px; right: 10px; background: #ff4d4d; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; display: none; z-index: 10; font-weight: bold; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: rgba(0,0,0,0.9); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
-        .nav-item { color: #fff; opacity: 0.5; text-align: center; cursor: pointer; transition: 0.3s; flex: 1; }
-        .nav-item.active { opacity: 1; color: var(--accent); }
-        .nav-item i { font-size: 20px; display: block; }
-        .nav-item span { font-size: 10px; margin-top: 4px; display: block; }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; background: rgba(0,0,0,0.6); border: 1px solid var(--border); color: #fff; border-radius: 10px; font-size: 14px; }
-        button { background: var(--accent); color: #fff; border: none; padding: 12px; border-radius: 10px; width: 100%; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:active { transform: scale(0.98); }
-        #chat-box { height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 10px; }
-        .msg { padding: 10px 14px; border-radius: 15px; max-width: 85%; font-size: 14px; line-height: 1.4; }
-        .user-m { background: var(--accent); align-self: flex-end; box-shadow: 0 4px 10px rgba(138, 43, 226, 0.3); }
-        .bot-m { background: #2a2a2a; align-self: flex-start; }
-        #admin-chat-monitor { height: 120px; overflow-y: auto; font-size: 12px; background: #111; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); }
-    </style>
+<meta charset="UTF-8">
+<title>HELLSING</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #000;
+  color: white;
+}
+
+/* HEADER */
+header {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid #111;
+}
+
+.logo {
+  font-size: 26px;
+  letter-spacing: 6px;
+}
+
+.search {
+  background: #111;
+  border: none;
+  padding: 8px;
+  color: white;
+}
+
+/* GRID */
+.container {
+  padding: 20px;
+}
+
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
+  gap: 20px;
+}
+
+.card {
+  background: #111;
+  padding: 15px;
+  transition: 0.3s;
+}
+
+.card:hover {
+  background: #1a0000;
+}
+
+/* BUTTON */
+button {
+  background: red;
+  border: none;
+  padding: 10px;
+  color: white;
+  cursor: pointer;
+}
+
+/* CART */
+.cart {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 320px;
+  height: 100%;
+  background: #111;
+  padding: 20px;
+  display: none;
+}
+
+/* ADMIN */
+.admin {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  background: #111;
+  padding: 15px;
+  width: 100%;
+  display: none;
+}
+</style>
 </head>
+
 <body>
-    <header>
-        <img id="site-logo" src="https://flaticon.com" class="logo-img">
-        <h1 id="site-name">R.I.D</h1>
-    </header>
 
-    <main>
-        <!-- МАГАЗИН -->
-        <section id="home" class="page active">
-            <div id="product-list" class="shop-grid"></div>
-        </section>
+<header>
+  <div class="logo">HELLSING</div>
+  <input class="search" placeholder="Поиск..." oninput="search(this.value)">
+  <div>
+    <button onclick="toggleCart()">🛒</button>
+    <button onclick="toggleAdmin()">⚙️</button>
+  </div>
+</header>
 
-        <!-- ПОДДЕРЖКА -->
-        <section id="support" class="page">
-            <div class="glass">
-                <div id="chat-box"></div>
-                <div style="margin-top: 10px; display: flex; gap: 5px;">
-                    <input type="text" id="user-input" placeholder="Напишите поддержке..." onkeypress="if(event.key==='Enter') sendUserMsg()">
-                    <button onclick="sendUserMsg()" style="width: 50px;"><i class="fa fa-paper-plane"></i></button>
-                </div>
-            </div>
-        </section>
+<div class="container">
+  <div class="products" id="products"></div>
+</div>
 
-        <!-- АДМИНКА -->
-        <section id="admin" class="page">
-            <div class="glass" style="margin-bottom: 20px;">
-                <h4 style="color: var(--accent); margin: 0 0 10px 0;">Управление чатом</h4>
-                <div id="admin-chat-monitor"></div>
-                <input type="text" id="admin-reply-input" placeholder="Введите ваш ответ клиенту...">
-                <button onclick="adminReply()">Ответить клиенту</button>
-            </div>
-            <div class="glass">
-                <h4>Добавить новый товар</h4>
-                <input type="text" id="p-name" placeholder="Название товара">
-                <input type="number" id="p-price" placeholder="Цена (в рублях)">
-                <input type="text" id="p-img" placeholder="Ссылка на картинку (URL)">
-                <button onclick="addProd()">Опубликовать в каталог</button>
-                <hr style="opacity:0.1; margin:20px 0;">
-                <h4 style="margin: 0 0 10px 0;">Настройки безопасности</h4>
-                <input type="password" id="new-pass" placeholder="Новый пароль админа">
-                <button onclick="changePass()" style="background:#444">Сменить пароль</button>
-                <input type="text" id="new-logo" placeholder="URL нового логотипа" style="margin-top: 15px;">
-                <button onclick="changeLogo()" style="background:#444">Сменить логотип сайта</button>
-            </div>
-        </section>
-    </main>
+<!-- CART -->
+<div class="cart" id="cart">
+  <h2>Корзина</h2>
+  <div id="cartItems"></div>
+  <h3 id="total"></h3>
+  <button onclick="checkout()">Оплатить</button>
+</div>
 
-    <!-- МЕНЮ -->
-    <nav class="bottom-nav">
-        <div class="nav-item active" id="btn-home" onclick="showPage('home')">
-            <i class="fa fa-house"></i><span>Дом</span>
-        </div>
-        <div class="nav-item" id="btn-support" onclick="showPage('support')">
-            <i class="fa fa-comment"></i><span>Чат</span>
-        </div>
-        <div class="nav-item" id="btn-admin" onclick="authAdmin()">
-            <i class="fa fa-shield"></i><span>Админ</span>
-        </div>
-    </nav>
+<!-- ADMIN PANEL -->
+<div class="admin" id="admin">
+  <h3>Добавить товар</h3>
+  <input id="name" placeholder="Название"><br>
+  <input id="price" placeholder="Цена"><br>
+  <input id="desc" placeholder="Описание"><br>
+  <button onclick="addProduct()">Добавить</button>
+</div>
 
-    <script>
-        let adminPass = localStorage.getItem('adminPass') || "Rid1962";
-        let wallet = "4100119521035405"; // ВАШ КОШЕЛЕК
-        let isAdmin = false;
-        let products = JSON.parse(localStorage.getItem('products')) || [];
+<script>
+let products = [
+  {name:"Hoodie Black",price:4990,desc:"Oversize hoodie"},
+  {name:"T-shirt Red",price:2990,desc:"Premium cotton"}
+];
 
-        function renderProducts() {
-            const list = document.getElementById('product-list');
-            list.innerHTML = '';
-            products.forEach((p, index) => {
-                list.innerHTML += `
-                    <div class="card glass">
-                        <button class="del-btn" style="display:${isAdmin ? 'block' : 'none'}" onclick="removeProd(${index})">✕</button>
-                        <img src="${p.img}">
-                        <h3>${p.name}</h3>
-                        <div style="color:var(--accent); font-weight:bold; font-size: 1.2em; margin: 10px 0;">${p.price} ₽</div>
-                        <button onclick="pay('${p.name}', ${p.price})">Оплатить СБП</button>
-                    </div>`;
-            });
-        }
+let cart = [];
 
-        function showPage(id) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.getElementById('btn-' + id).classList.add('active');
-            renderProducts();
-        }
+function renderProducts(list){
+  let el = document.getElementById("products");
+  el.innerHTML = "";
 
-        function authAdmin() {
-            if(prompt("Введите пароль администратора:") === adminPass) { 
-                isAdmin = true; 
-                showPage('admin'); 
-            } else { alert("Неверный пароль!"); }
-        }
+  list.forEach((p,i)=>{
+    el.innerHTML += `
+      <div class="card">
+        <h3>${p.name}</h3>
+        <p>${p.desc}</p>
+        <b>${p.price} ₽</b><br><br>
+        <button onclick="addToCart(${i})">В корзину</button>
+      </div>
+    `;
+  });
+}
 
-        function addProd() {
-            const name = document.getElementById('p-name').value;
-            const price = document.getElementById('p-price').value;
-            const img = document.getElementById('p-img').value || 'https://placeholder.com';
-            if(!name || !price) return alert("Введите название и цену");
-            
-            products.push({name, price, img});
-            localStorage.setItem('products', JSON.stringify(products));
-            alert("Товар добавлен в каталог!");
-            showPage('home');
-        }
+function addToCart(i){
+  cart.push(products[i]);
+  renderCart();
+}
 
-        function removeProd(index) {
-            if(confirm("Вы действительно хотите удалить этот товар?")) {
-                products.splice(index, 1);
-                localStorage.setItem('products', JSON.stringify(products));
-                renderProducts();
-            }
-        }
+function renderCart(){
+  let el = document.getElementById("cartItems");
+  let total = 0;
+  el.innerHTML = "";
 
-        function pay(title, sum) {
-            // Прямая ссылка на платежную форму ЮMoney (мобильная версия поддерживает СБП)
-            const url = `https://yoomoney.ru{wallet}&quickpay-form=shop&targets=${encodeURIComponent('RID: '+title)}&sum=${sum}&paymentType=AC`;
-            window.open(url, '_blank');
-        }
+  cart.forEach(p=>{
+    total += p.price;
+    el.innerHTML += `<div>${p.name} - ${p.price} ₽</div>`;
+  });
 
-        function sendUserMsg() {
-            const v = document.getElementById('user-input').value;
-            if(!v) return;
-            document.getElementById('chat-box').innerHTML += `<div class="msg user-m">${v}</div>`;
-            document.getElementById('admin-chat-monitor').innerHTML += `<div style="margin-bottom:5px; border-bottom: 1px solid #222; padding-bottom: 3px;"><b>Клиент:</b> ${v}</div>`;
-            document.getElementById('user-input').value = '';
-            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
-        }
+  document.getElementById("total").innerText = "Итого: " + total + " ₽";
+}
 
-        function adminReply() {
-            const v = document.getElementById('admin-reply-input').value;
-            if(!v) return;
-            document.getElementById('chat-box').innerHTML += `<div class="msg bot-m"><b>Администрация:</b> ${v}</div>`;
-            document.getElementById('admin-reply-input').value = '';
-            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
-            alert("Ваш ответ отправлен в чат поддержки!");
-        }
+function toggleCart(){
+  let el = document.getElementById("cart");
+  el.style.display = el.style.display==="block"?"none":"block";
+}
 
-        function changePass() {
-            const p = document.getElementById('new-pass').value;
-            if(p) { adminPass = p; localStorage.setItem('adminPass', p); alert("Пароль успешно изменен!"); }
-        }
+function search(q){
+  let filtered = products.filter(p =>
+    p.name.toLowerCase().includes(q.toLowerCase()) ||
+    p.desc.toLowerCase().includes(q.toLowerCase())
+  );
+  renderProducts(filtered);
+}
 
-        function changeLogo() {
-            let url = document.getElementById('new-logo').value;
-            if(url) { document.getElementById('site-logo').src = url; alert("Логотип обновлен!"); }
-        }
+/* ADMIN */
+function toggleAdmin(){
+  let el = document.getElementById("admin");
+  el.style.display = el.style.display==="block"?"none":"block";
+}
 
-        // Запуск витрины
-        renderProducts();
-    </script>
+function addProduct(){
+  let name = document.getElementById("name").value;
+  let price = parseInt(document.getElementById("price").value);
+  let desc = document.getElementById("desc").value;
+
+  products.push({name,price,desc});
+  renderProducts(products);
+}
+
+/* PAYMENT */
+function checkout(){
+  alert("Здесь будет подключение YooKassa");
+}
+
+renderProducts(products);
+</script>
+
 </body>
 </html>
